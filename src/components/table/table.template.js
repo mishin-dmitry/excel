@@ -1,20 +1,35 @@
+// коды первой и последней буквы алфавита
 const CODES = {
 	A: 65,
 	Z: 90
 }
 
-function toCell() {
-	return `<div class="cell" contenteditable="true"></div>`
+// функция для генерации новой ячейки
+function toCell(_, col) {
+	return `<div class="cell" contenteditable="true" data-col="${col}"></div>`
 }
 
-function toColumn(col) {
-	return `<div class="column">${col}</div>`
-}
-
-function createRow(index, content) {
+// функция для генерации новой колонки и элемента ресайза
+function toColumn(col, index) {
 	return `
-		<div class="row">
-		 <div class="row__info">${index ? index : ''}</div>
+		<div class="column" data-type="resizable" data-col="${index}">
+			${col}
+			<!--добавим дата атрибут для делегирования обработки события-->
+			<div class="col-resize" data-resize="col"></div>
+		</div>
+	`
+}
+
+// функция для генерации новой строчки
+function createRow(index, content) {
+	// добавим дата атрибут для делегирования обработки события
+	const resize = index ? '<div class="row-resize" data-resize="row"></div>' : ''
+	return `
+		<div class="row" data-type="resizable" data-row="${index}">
+		 <div class="row__info">
+			${index ? index : ''}
+			${resize}
+		</div>
 		 <div class="row__data">${content}</div>
 		</div>
 	`
@@ -36,7 +51,7 @@ export function createTable(rowsCount = 15) {
 		.map(toColumn)
 		.join('')
 
-	// делаем ряд с пустыми ячейками
+	// делаем ряд с пустой ячейкой
 	rows.push(createRow(null, cols))
 	const cells = new Array(colsCount)
 		.fill('')
