@@ -4,9 +4,20 @@ const CODES = {
 	Z: 90
 }
 
-// функция для генерации новой ячейки
-function toCell(_, col) {
-	return `<div class="cell" contenteditable="true" data-col="${col}"></div>`
+// функция для генерации новой ячейки c замыканием
+function toCell(row) {
+	return function(_, col) {
+		return `
+			<div
+				class="cell"
+				contenteditable="true"
+				data-col="${col}"
+				data-id="${row}:${col}"
+				data-type="cell"
+			>
+			</div>
+		`
+	}
 }
 
 // функция для генерации новой колонки и элемента ресайза
@@ -30,7 +41,7 @@ function createRow(index, content) {
 			${index ? index : ''}
 			${resize}
 		</div>
-		 <div class="row__data">${content}</div>
+		<div class="row__data">${content}</div>
 		</div>
 	`
 }
@@ -53,13 +64,14 @@ export function createTable(rowsCount = 15) {
 
 	// делаем ряд с пустой ячейкой
 	rows.push(createRow(null, cols))
-	const cells = new Array(colsCount)
-		.fill('')
-		.map(toCell)
-		.join('')
 
-	for (let i = 0; i < rowsCount; i++) {
-		rows.push(createRow(i + 1, cells))
+	for (let row = 0; row < rowsCount; row++) {
+		const cells = new Array(colsCount)
+			.fill('')
+			.map(toCell(row))
+			.join('')
+
+		rows.push(createRow(row + 1, cells))
 	}
 
 	return rows.join('')

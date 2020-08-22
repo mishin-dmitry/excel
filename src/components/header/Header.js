@@ -4,6 +4,13 @@ export class Header extends ExcelComponent {
 	// создадим статическое поле, чтобы к нему был доступ, без создания инстанста
 	static className = 'excel__header'
 
+	constructor($root, options) {
+		super($root, {
+			name: 'Header',
+			...options
+		});
+	}
+
 	// метод возвращающий разметку компонента
 	toHTML() {
 		return `
