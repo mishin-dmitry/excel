@@ -4,10 +4,11 @@ import {resizeHandler} from '@/components/table/table.resize';
 import {isCell, matrix, nextSelector, shouldResize} from './table.functions';
 import {TableSelection} from '@/components/table/TableSelection';
 import {$} from '@core/dom';
+import * as actions from '@/redux/actions'
 
 export class Table extends ExcelComponent {
 	// создадим статическое поле, чтобы к нему был доступ, без создания инстанста
-	static className = 'excel__table'
+	static className = 'excel__table';
 
 	constructor($root, options) {
 		super($root, {
@@ -19,53 +20,62 @@ export class Table extends ExcelComponent {
 
 	// метод возвращающий разметку компонента
 	toHTML() {
-		return createTable()
+		return createTable(20, this.store.getState());
 	}
 
 	prepare() {
-		this.selection = new TableSelection()
+		this.selection = new TableSelection();
 	}
 
 	init() {
 		super.init();
 
-		const $cell = this.$root.find('[data-id="0:0"]')
-		this.selectCell($cell)
+		const $cell = this.$root.find('[data-id="0:0"]');
+		this.selectCell($cell);
 
 		this.$on('formula:input', text => {
-			this.selection.current.text(text)
+			this.selection.current.text(text);
 		})
 
 		this.$on('formula:enterPress', () => {
-			this.selection.current.focus()
+			this.selection.current.focus();
 		})
 	}
 
 	selectCell($cell) {
-		this.selection.select($cell)
-		this.$emit('table:select', $cell)
+		this.selection.select($cell);
+		this.$emit('table:select', $cell);
+	}
+
+	async resizeTable(event) {
+		try {
+			const data = await resizeHandler(this.$root, event);
+			this.$dispatch(actions.tableResize(data))
+		} catch (e) {
+			console.error(e)
+		}
 	}
 
 	onMousedown(event) {
 		if (shouldResize(event)) {
-			resizeHandler(this.$root, event)
+			this.resizeTable(this.$root, event);
 		} else if (isCell(event)) {
 			// нажатая ячейка
-			const $target = $(event.target)
+			const $target = $(event.target);
 
 			// позволяет выбирать множество ячеек else одну ячейку
 			if (event.shiftKey) {
 				// ячейка на которую мы кликнули с зажатым шифтом
-				const target = $target.id(true)
+				const target = $target.id(true);
 				// выбранная ячейка
-				const current = this.selection.current.id(true)
+				const current = this.selection.current.id(true);
 
 				const $cells = matrix(target, current)
-					.map(id => this.$root.find(`[data-id="${id}"]`))
+					.map(id => this.$root.find(`[data-id="${id}"]`));
 
-				this.selection.selectGroup($cells)
+				this.selection.selectGroup($cells);
 			} else {
-				this.selection.select($target)
+				this.selectCell($target);
 			}
 		}
 	}
@@ -83,15 +93,15 @@ export class Table extends ExcelComponent {
 		const {key} = event;
 
 		if (keys.includes(key) && !event.shiftKey) {
-			event.preventDefault()
+			event.preventDefault();
 			const id = this.selection.current.id(true);
-			const $next = this.$root.find(nextSelector(key, id))
-			this.selectCell($next)
+			const $next = this.$root.find(nextSelector(key, id));
+			this.selectCell($next);
 		}
 	}
 
 	onInput(event) {
-		this.$emit('table:input', $(event.target))
+		this.$emit('table:input', $(event.target));
 	}
 }
 
